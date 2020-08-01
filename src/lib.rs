@@ -1,6 +1,6 @@
+use futures::lock::{Mutex, MutexGuard};
 use std::cell::UnsafeCell;
 use std::sync::atomic::{AtomicBool, Ordering};
-use futures::lock::{Mutex, MutexGuard};
 
 #[derive(Debug)]
 pub enum ValueOrSetter<'l, T> {
@@ -48,22 +48,27 @@ impl<T> Lazy<T> {
     }
 
     pub async fn get_or_set<'l>(&'l self) -> ValueOrSetter<'l, T> {
-        if self.is_initialized.load(Ordering::Relaxed) {
-            return ValueOrSetter::Value(self.extract())
+        match self.get() {
+            Some(value) => return ValueOrSetter::Value(value),
+            None => (),
         }
 
         let guard = self.lock.lock().await;
         if self.is_initialized.load(Ordering::Relaxed) {
             ValueOrSetter::Value(self.extract())
         } else {
-            ValueOrSetter::Setter(LazySetter::<T> { parent: &self, guard })
+            ValueOrSetter::Setter(LazySetter::<T> {
+                parent: &self,
+                guard,
+            })
         }
     }
 
-    pub async fn get(&self) -> Option<&T> {
-        match self.get_or_set().await {
-            ValueOrSetter::Value(value) => Some(value),
-            ValueOrSetter::Setter(_) => None,
+    pub fn get(&self) -> Option<&T> {
+        if self.is_initialized.load(Ordering::Relaxed) {
+            Some(self.extract())
+        } else {
+            None
         }
     }
 }
@@ -80,7 +85,7 @@ mod tests {
     #[tokio::test]
     async fn get_unset() {
         let lazy: Lazy<i32> = Lazy::new();
-        assert_eq!(lazy.get().await, None)
+        assert_eq!(lazy.get(), None)
     }
 
     #[tokio::test]
