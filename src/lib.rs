@@ -1,11 +1,25 @@
+#[derive(Debug)]
+pub enum ValueOrSetter<'v, T> {
+    Value(&'v T),
+    Setter(LazySetter),
+}
+
+#[derive(Debug)]
+pub struct LazySetter {}
+
 pub struct Lazy<T> {
-    value: Option<Box<T>>
+    value: Option<T>,
 }
 
 impl<T> Lazy<T> {
     pub fn new() -> Self {
-        Self{
-            value: None
+        Self { value: None }
+    }
+
+    pub fn get_or_set(&self) -> ValueOrSetter<T> {
+        match &self.value {
+            Some(_) => todo!(),
+            None => ValueOrSetter::Setter(LazySetter {}),
         }
     }
 
@@ -27,5 +41,11 @@ mod tests {
     fn get_unset() {
         let lazy = Lazy::<i32>::new();
         assert_eq!(lazy.get(), None)
+    }
+
+    #[test]
+    fn get_or_set() {
+        let lazy = Lazy::<i32>::new();
+        assert!(matches!(lazy.get_or_set(), ValueOrSetter::Setter(_)));
     }
 }
