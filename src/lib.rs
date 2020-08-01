@@ -31,6 +31,8 @@ pub struct Lazy<T> {
     value: UnsafeCell<Option<T>>,
 }
 
+unsafe impl<T> Sync for Lazy<T> where T: Sync {}
+
 impl<T> Lazy<T> {
     pub fn new() -> Self {
         Self {
@@ -76,10 +78,17 @@ impl<T> Lazy<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::thread;
 
     #[test]
     fn instantiation_works() {
         Lazy::<()>::new();
+    }
+
+    #[test]
+    fn share_between_threads() {
+        let lazy: Lazy<i32> = Lazy::new();
+        assert!(thread::spawn(move || lazy.get() == None).join().unwrap());
     }
 
     #[tokio::test]
