@@ -33,6 +33,12 @@ pub struct Lazy<T> {
 
 unsafe impl<T> Sync for Lazy<T> where T: Sync {}
 
+impl<T> Default for Lazy<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Lazy<T> {
     pub fn new() -> Self {
         Self {
@@ -43,16 +49,17 @@ impl<T> Lazy<T> {
     }
 
     fn extract(&self) -> &T {
-        match unsafe { self.value.get().as_ref().unwrap() } {
-            Some(value) => value,
-            None => unreachable!(),
+        if let Some(value) = unsafe { self.value.get().as_ref().unwrap() } {
+            value
+        } else {
+            unreachable!()
         }
     }
 
+    #[allow(clippy::needless_lifetimes)]
     pub async fn get_or_set<'l>(&'l self) -> ValueOrSetter<'l, T> {
-        match self.get() {
-            Some(value) => return ValueOrSetter::Value(value),
-            None => (),
+        if let Some(value) = self.get() {
+            return ValueOrSetter::Value(value);
         }
 
         let guard = self.lock.lock().await;
