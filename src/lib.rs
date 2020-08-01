@@ -63,18 +63,17 @@ impl<T> Lazy<T> {
         }
 
         let guard = self.lock.lock().await;
-        if self.is_initialized.load(Ordering::Relaxed) {
-            ValueOrSetter::Value(self.extract())
-        } else {
-            ValueOrSetter::Setter(Setter::<T> {
-                parent: &self,
-                guard,
-            })
+        if let Some(value) = self.get() {
+            return ValueOrSetter::Value(value);
         }
+        ValueOrSetter::Setter(Setter::<T> {
+            parent: &self,
+            guard,
+        })
     }
 
     pub fn get(&self) -> Option<&T> {
-        if self.is_initialized.load(Ordering::Relaxed) {
+        if self.is_initialized.load(Ordering::Acquire) {
             Some(self.extract())
         } else {
             None
