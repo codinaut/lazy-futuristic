@@ -5,16 +5,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 #[derive(Debug)]
 pub enum ValueOrSetter<'l, T> {
     Value(&'l T),
-    Setter(LazySetter<'l, T>),
+    Setter(Setter<'l, T>),
 }
 
 #[derive(Debug)]
-pub struct LazySetter<'l, T> {
+pub struct Setter<'l, T> {
     parent: &'l Lazy<T>,
     guard: MutexGuard<'l, ()>,
 }
 
-impl<'l, T> LazySetter<'l, T> {
+impl<'l, T> Setter<'l, T> {
     pub fn set(&self, value: T) -> &'l T {
         unsafe {
             *self.parent.value.get() = Some(value);
@@ -59,7 +59,7 @@ impl<T> Lazy<T> {
         if self.is_initialized.load(Ordering::Relaxed) {
             ValueOrSetter::Value(self.extract())
         } else {
-            ValueOrSetter::Setter(LazySetter::<T> {
+            ValueOrSetter::Setter(Setter::<T> {
                 parent: &self,
                 guard,
             })
