@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/codinaut/lazy-futuristic/compare/v1.0.0...v1.0.1) (2020-08-02)
+
+
+### Bug Fixes
+
+* crate docs ([a6718db](https://github.com/codinaut/lazy-futuristic/commit/a6718dbc606ef5b3b367b57c574d7d6957a5c734))
+* is_initialized AtomicBool ordering ([9266e5a](https://github.com/codinaut/lazy-futuristic/commit/9266e5a95a2146a9480367bf9724c6522089be9f))
+
 # 1.0.0 (2020-08-01)
 
 
