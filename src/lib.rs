@@ -5,12 +5,13 @@
 //! # Example
 //! ```
 //! # tokio::runtime::Runtime::new().unwrap().block_on (async {
-//! use lazy_futuristic::{Lazy, ValueOrSetter};
+//! use lazy_futuristic::Lazy;
+//! use lazy_futuristic::ValueOrSetter::*;
 //!
 //! let lazy_number: Lazy<i32> = Lazy::new();
 //! let number = match lazy_number.get_or_set().await {
-//!     ValueOrSetter::Value(value) => value,
-//!     ValueOrSetter::Setter(setter) => setter.set(10),
+//!     Value(value) => value,
+//!     Setter(setter) => setter.set(10),
 //! };
 //!
 //! assert_eq!(*number, 10);
